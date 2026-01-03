@@ -1,0 +1,80 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsfonts}
+
+\begin{document}
+
+\begin{center}
+    \text{\textbf{\huge Gravity-Inspired Lung Basin Detection}} \\
+    \text{\large Mathematical Formulation}
+\end{center}
+
+\vspace{1cm}
+
+\section*{1. Image and Energy Landscape}
+
+\text{Let the input image be defined as a scalar field:} \\
+\[ I : \Omega \subset \mathbb{R}^2 \rightarrow \mathbb{R} \]
+\text{where } \Omega \text{ denotes the image domain.} \\
+
+\text{We define an energy (potential) field } E(x,y) \text{ such that lung regions correspond to low-energy basins:} \\
+\[ E(x,y) = \phi(I(x,y)) \]
+
+\text{Typical choices include:} \\
+\[ E = I, \quad E = \text{GaussianSmooth}(I), \quad E = I + \lambda \lVert \nabla I \rVert \]
+
+\text{The exact form of } \phi(\cdot) \text{ is not fixed, but must satisfy:} \\
+$\bullet$ \text{ Lung interior } $\rightarrow$ \text{ lower energy} \\
+$\bullet$ \text{ Bones and boundaries } $\rightarrow$ \text{ higher energy}
+
+\section*{2. Patch as a Probe (Initial Condition)}
+
+\text{Let a candidate patch } P_i \text{ be represented by its center point:} \\
+\[ p_i = (x_i, y_i) \]
+\text{Patch selection provides a local prior, but does not determine global lung membership.}
+
+\section*{3. Outer Neighborhood Definition}
+
+\text{For each patch center } p_i, \text{ define an outer neighborhood ring:} \\
+\[ \Omega_i = \{ q \in \Omega \mid r < \lVert q - p_i \rVert \le R \} \]
+\text{where:} \\
+$\bullet$ \text{ } r \text{ is the patch radius} \\
+$\bullet$ \text{ } R > r \text{ defines the surrounding context scale}
+
+\section*{4. Inward Gradient (Flux) Test}
+
+\text{For each point } q \in \Omega_i, \text{ define the inward gradient projection:} \\
+\[ g(q; p_i) = \nabla E(q) \cdot \frac{p_i - q}{\lVert p_i - q \rVert} \]
+
+\text{Interpretation:} \\
+$\bullet$ \text{ } g(q; p_i) < 0 \text{: energy decreases toward the patch center} \\
+$\bullet$ \text{ } g(q; p_i) > 0 \text{: energy increases or flows away}
+
+\section*{5. Basin Trapping Criterion}
+
+\text{A patch } P_i \text{ is considered globally lung-like if a majority of its surrounding neighborhood exhibits inward energy flow:} \\
+\[ S_i = \frac{1}{|\Omega_i|} \sum_{q \in \Omega_i} \mathbb{I}[ g(q; p_i) < 0 ] \]
+\text{where } \mathbb{I}[\cdot] \text{ is the indicator function.} \\
+
+\text{The trapping condition is defined as:} \\
+\[ S_i \ge \tau \]
+\text{with } \tau \in (0.5, 1) \text{ controlling the isotropy requirement.}
+
+\section*{6. Interpretation}
+
+$\bullet$ \text{ Lung regions behave as isotropic sinks in the energy landscape.} \\
+$\bullet$ \text{ False regions (ribs, shelves, image corners) exhibit anisotropic or incomplete inward gradients.} \\
+$\bullet$ \text{ Boundary and background regions fail the trapping condition naturally.}
+
+\section*{7. Lung Basin Definition}
+
+\text{The lung region can be defined as the union of all trapped patches:} \\
+\[ \mathcal{L} = \bigcup_{i : S_i \ge \tau} P_i \]
+\text{This formulation characterizes the lung by its basin-of-attraction behavior in the global energy field.}
+
+\section*{8. Conceptual Summary}
+
+\text{A lung region is a set of points whose surrounding neighborhood exhibits a net inward energy gradient, indicating that it lies within a trapped basin of the image energy landscape.}
+
+\end{document}
