@@ -1,99 +1,66 @@
-# 🫁 Lung Imaging Lab
+# Lung Imaging Lab
 
-**Lung Imaging Lab** is a modular research sandbox for the mathematical exploration of medical image patches.  
-Built with **Streamlit**, this dashboard enables researchers to prototype, test, and validate diverse formulations for lung tissue characterization and patch expansion in Chest X-Ray (CXR) images.
+**Lung Imaging Lab** is a modular research workstation designed for the mathematical exploration of medical image patches. 
 
-Rather than relying on black-box AI models, this project emphasizes **transparent, physics-informed, and geometry-aware formulations** operating on localized image domains.
+Built with **Streamlit**, this dashboard provides a robust environment for researchers to prototype, visualize, and validate mathematical formulations applied to localized image domains in Chest X-Ray (CXR) images.
 
----
 
-## 🎯 Project Philosophy
+## Project Purpose
 
-This repository is intentionally designed as a **laboratory**, not a single-method solution.
+This repository is designed as a **formulation laboratory**. It is built to test easily on how different mathematical descriptors behave when applied to specific regions of a medical image.
 
-It aims to answer questions such as:
-- *What mathematical formulation best captures “lung-likeness” under different contexts?*
-- *How does local structure change as a patch expands spatially?*
-- *Which scalar fields or geometric descriptors are stable across patients and acquisition conditions?*
+The primary goal is to provide a sandbox where you can:
+- **Experiment** with new formulas for tissue characterization.
+- **Analyze** the geometric and statistical properties of image patches in real-time.
+- **Develop** logic for patch expansion and anatomical fitting.
 
-Methods may evolve — the **framework remains**.
+## Key Features
 
----
+### 1. Automated Metric Discovery
+The application uses a dynamic discovery system. Any mathematical function defined in `modules/metrics.py` (prefixed with `calc_`) is automatically detected and rendered as a live metric in the dashboard.
 
-## 🚀 Key Features
+### 2. Multi-Modal Visualization Suite
+Supports a variety of real-time rendering modes to inspect patch data from different perspectives:
+- **Intensity Analysis**: Histograms and pixel distribution.
+- **Surface Modeling**: 3D mesh representation of image intensity.
+- **Field Visualization**: Vector and gradient field projections.
+- **Topological Mapping**: Contour and isoline visualizations.
 
-- **Modular Metrics Framework**  
-  Any function prefixed with `calc_` inside `modules/metrics.py` is automatically discovered and rendered.
+### 3. Interactive Exploration
+Using a real-time cropping interface, users can move "probes" across the CXR to see instantly how local coordinates and image content affect the calculated scores and visual output.
 
-- **Dynamic Multi-Modal Visualization**  
-  Real-time rendering of:
-  - Intensity histograms  
-  - 3D surface representations  
-  - Vector (flux) fields  
-  - Contour maps (optional)
-
-- **Physics-Informed Preprocessing**  
-  Gaussian smoothing and contrast stretching stabilize gradient-based and energy-based formulations.
-
-- **Interactive Patch Exploration**  
-  Real-time cropping allows immediate feedback on how patch position and size affect derived metrics.
-
----
-
-## 🧪 Theoretical Foundation: Gravity-Inspired Basin Detection
-
-One of the currently implemented formulations models lung regions as **low-energy basins** within an image-derived scalar field.
-
-### 1. Energy Field Definition
-
-An energy landscape is defined as:
-
-\[
-E(x, y) = I(x, y) + \lambda \left\lVert \nabla I(x, y) \right\rVert
-\]
-
-where:
-- \( I(x, y) \) is the image intensity  
-- \( \nabla I \) is the spatial gradient  
-- \( \lambda \) controls edge sensitivity
-
----
-
-### 2. Inward Flux (Basin Trapping Criterion)
-
-For a patch centered at \( p_i \), its surrounding neighborhood \( \Omega_i \) is evaluated using a directional flux test:
-
-\[
-g(q; p_i) = \nabla E(q) \cdot \frac{p_i - q}{\lVert p_i - q \rVert}
-\]
-
-The **basin trapping score** is defined as:
-
-\[
-S_i = \frac{1}{|\Omega_i|} \sum_{q \in \Omega_i} \mathbb{I}\left[g(q; p_i) < 0\right]
-\]
-
-A patch is considered *lung-like* if:
-
-\[
-S_i \ge \tau
-\]
-
-where \( \tau \) is a tunable threshold.
-
----
 
 ## 📁 Project Structure
 
 ```text
-├── app.py                  # Main Streamlit dashboard
+├── app.py                # Main Streamlit dashboard and UI logic
 ├── modules/
-│   ├── visualizer.py       # Rendering logic (3D, contour, vector fields)
-│   ├── metrics.py          # Patch-level formulations and descriptors
-│   └── utils.py            # Core mathematical & physics primitives
-├── research/
-│   ├── notes.tex           # Exploratory derivations & formulation notes
-│   ├── gravity_model.tex   # Basin / flux-based theory writeup
-│   └── figures/            # Exported plots and diagrams for papers
-├── requirements.txt        # Dependencies (OpenCV, Plotly, Streamlit, etc.)
+│   ├── visualizer.py     # Rendering logic for all plots and charts
+│   ├── metrics.py        # Implementation of patch-level formulas
+│   └── utils.py          # Core mathematical and image primitives
+├── research/             # Mathematical derivations and LaTeX notes
+├── requirements.txt      # Project dependencies
 └── README.md
+```
+
+#  Getting Started
+Clone the repository:
+
+```Bash
+
+git clone https://github.com/VagueAlter/lung-imaging-lab
+cd lung-imaging-lab
+```
+
+Install Dependencies:
+
+```Bash
+
+pip install -r requirements.txt
+```
+
+Launch the Lab:
+
+```Bash
+streamlit run app.py
+```
