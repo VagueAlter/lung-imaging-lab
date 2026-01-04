@@ -1,0 +1,143 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{bm}
+\geometry{margin=1in}
+
+\title{Research Note:\\
+Is There a Chasm within Me?}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Motivation}
+
+Traditional patch-based lung localization methods rely primarily on local texture cues, such as rib periodicity suppression.
+However, analysis of the image intensity surface reveals that lung regions exhibit a global topographic structure:
+they form wide, trapped basins in an energy landscape rather than simple local minima.
+
+Earlier gravity-inspired formulations characterize lung regions as isotropic sinks that attract surrounding gradients.
+While effective for strictly interior seeds, such formulations become sensitive to patch size and boundary crossing.
+This note formalizes a more general patch selection criterion based on the existence and depth of basin structures
+\emph{contained within} a patch.
+
+\section{Image and Energy Field}
+
+Let the input chest X-ray image be defined as a scalar field:
+\begin{equation}
+I : \Omega \subset \mathbb{R}^2 \rightarrow \mathbb{R}
+\end{equation}
+
+We define an associated energy (potential) field:
+\begin{equation}
+E(x,y) = \phi(I(x,y))
+\end{equation}
+where the mapping $\phi(\cdot)$ is chosen such that:
+\begin{itemize}
+\item Lung interior corresponds to lower energy
+\item Bones and body boundaries correspond to higher energy
+\end{itemize}
+
+Typical choices include Gaussian-smoothed intensity or intensity augmented by gradient magnitude.
+
+\section{Patch Representation}
+
+Let a patch $P_i \subset \Omega$ be defined as a connected region centered at:
+\begin{equation}
+p_i = (x_i, y_i)
+\end{equation}
+
+Patch-based features (e.g.\ rib periodicity measures) provide a \emph{local structural prior}, but do not determine global lung membership.
+
+\section{Gravity-Based Basin Attraction (Previous Formulation)}
+
+In the gravity-inspired formulation, a patch is considered lung-like if its surrounding neighborhood exhibits a net inward energy gradient.
+Formally, for an outer neighborhood $\Omega_i$ surrounding $P_i$, the inward gradient projection is defined as:
+\begin{equation}
+g(q; p_i) = \nabla E(q) \cdot \frac{p_i - q}{\lVert p_i - q \rVert}
+\end{equation}
+
+A patch satisfies the gravity criterion if a majority of $g(q; p_i)$ values are negative, indicating isotropic attraction.
+
+This formulation is effective when $P_i$ lies strictly within the lung interior.
+However, when patches are oversized or cross basin boundaries, the inward-gradient assumption breaks down,
+leading to false rejections despite the presence of lung structure within the patch.
+
+\section{Limitations of Pure Basin Attraction}
+
+The gravity-based criterion implicitly assumes:
+\begin{itemize}
+\item The patch center lies near the basin minimum
+\item The patch does not cross basin boundaries
+\item Surrounding gradients are representative of basin topology
+\end{itemize}
+
+In practice, bounding box predictions and core masks may be oversized due to anatomical variability,
+imperfect body masking, or dataset annotation bias.
+In such cases, a patch may \emph{contain} a lung basin without being located at its minimum,
+causing the gravity criterion to fail.
+
+\section{Basin Containment Hypothesis}
+
+To relax the strict interior-seed assumption, we propose the following hypothesis:
+
+\begin{quote}
+A patch should be considered lung-like if it contains a meaningful basin structure,
+regardless of whether the patch center itself lies at the basin minimum.
+\end{quote}
+
+This shifts the objective from basin \emph{attraction} to basin \emph{existence and depth}.
+
+\section{Internal Basin Structure}
+
+Restrict the energy field to the patch domain:
+\begin{equation}
+E_{P_i} = E \big|_{P_i}
+\end{equation}
+
+Define the internal basin depth of patch $P_i$ as:
+\begin{equation}
+D_i = \max_{x \in \partial P_i} E(x) - \min_{x \in P_i} E(x)
+\end{equation}
+
+A patch is considered to contain a basin if:
+\begin{equation}
+D_i \ge \delta
+\end{equation}
+where $\delta$ is a minimum depth threshold controlling basin significance.
+
+Additional constraints may require that the minimum lies sufficiently far from the patch boundary.
+
+\section{Relationship to Gravity-Based Formulation}
+
+The basin containment criterion generalizes the gravity-based formulation:
+\begin{itemize}
+\item Gravity-based attraction tests whether a patch is \emph{positioned at} a basin minimum
+\item Basin containment tests whether a patch \emph{contains} a basin minimum
+\end{itemize}
+
+When a patch lies strictly inside a basin, both criteria agree.
+When a patch is oversized or boundary-crossing, gravity-based attraction may fail,
+while basin containment remains valid.
+
+Thus, basin containment acts as a higher-level abstraction that subsumes gravity-based attraction
+under weaker and more robust assumptions.
+
+\section{Interpretation}
+
+Under this formulation, lung regions are characterized not by absolute intensity or local texture alone,
+but by the presence of deep, trapped basin structures within the image energy landscape.
+Patch-based rib suppression provides a local prior,
+while basin containment encodes global topographic semantics.
+
+\section{Summary}
+
+This note proposes a patch selection criterion based on basin containment and depth,
+extending gravity-inspired basin attraction methods to handle oversized and imperfect patch proposals.
+The formulation preserves the physical intuition of energy landscapes while relaxing assumptions
+that are fragile under real-world annotation and segmentation noise.
+
+\end{document}

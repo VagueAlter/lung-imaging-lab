@@ -1,0 +1,152 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Research Note 002:\\
+Patch Demand Criteria for Lung Localization in Chest X-ray Images}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Motivation}
+
+Previous analysis showed that lung regions in chest X-ray (CXR) images form large basin-like
+structures in an image energy landscape.
+However, basin-based verification methods such as gravity-inspired attraction
+are sensitive to patch placement and may fail when candidate patches are oversized or imperfectly localized.
+
+This note focuses on an earlier stage of the pipeline: \emph{patch selection}.
+Rather than defining a single optimized score or decision boundary,
+the goal is to characterize patch \emph{demand} through a set of anatomical plausibility criteria.
+
+\section{Problem Setting}
+
+Given a binary core mask $M_{\text{core}}$ derived from coarse preprocessing,
+connected components are extracted as candidate regions.
+
+The objective is to rank these candidates according to their likelihood of corresponding
+to lung regions, without introducing learnable parameters or optimization-based weighting.
+
+\section{Candidate Generation from Core Mask}
+
+Connected components from $M_{\text{core}}$ are labeled and filtered based on a minimum area threshold.
+Each remaining component $C_i$ is treated as a candidate patch.
+
+For each $C_i$, feature extraction is conducted independently,
+combining global spatial context and local texture cues.
+
+\section{Rib-Based Local Feature Extraction}
+
+To capture rib-induced periodic patterns, we compute the positive vertical gradient:
+\[
+G_y = \max\left( \frac{\partial I}{\partial y}, 0 \right)
+\]
+
+This gradient is projected into a one-dimensional signal by summation along the horizontal axis:
+\begin{equation}
+s_i(y) = \sum_x G_y(x,y)
+\end{equation}
+
+The rib periodicity score $S_i$ is defined as the product of two components:
+\begin{equation}
+S_i = S_{\text{peak}}(s_i) \cdot S_{\text{auto}}(s_i)
+\end{equation}
+
+\subsection{Peak Density Component}
+
+The first component measures the regularity of inter-rib spacing:
+\begin{equation}
+S_{\text{peak}}(s_i) = \frac{n}{\sigma_{\Delta} + \epsilon}
+\end{equation}
+where $n$ is the number of detected peaks and $\sigma_{\Delta}$ is the standard deviation
+of the peak-to-peak distances.
+
+\subsection{Autocorrelation Component}
+
+The second component measures pattern repetition using normalized autocorrelation.
+Let $\hat{s}_i(y) = s_i(y) - \bar{s}_i$.
+The autocorrelation score is defined as:
+\begin{equation}
+S_{\text{auto}}(s_i) =
+\sum_{\tau = \tau_{\min}}^{\tau_{\max}} R_i(\tau),
+\quad
+R_i(\tau) =
+\frac{\sum_y \hat{s}_i(y)\hat{s}_i(y-\tau)}
+{\sum_y \hat{s}_i(y)^2}
+\end{equation}
+
+High values of $S_i$ indicate strong rib periodicity,
+whereas lung interiors typically exhibit lower scores.
+
+\section{Global Positional Criterion}
+
+Let $c_i$ denote the centroid of candidate $C_i$.
+The spine is treated as a global anatomical anchor,
+estimated as a high-intensity ridge in the image energy landscape.
+
+Candidates closer to the spine centerline are considered more plausible,
+reflecting the anatomical layout of the thoracic cavity.
+
+This criterion is used as a relative ordering cue rather than a hard constraint.
+
+\section{Patch Scale Criterion}
+
+In the absence of explicit body size estimation,
+candidate scale is normalized by the full image area:
+\[
+S_{\text{scale}}(C_i) = \frac{|C_i|}{|\Omega|}
+\]
+
+This provides a coarse prior favoring candidates that occupy a significant portion
+of the image, consistent with the large spatial extent of lung regions in CXR images.
+
+No absolute threshold is imposed; scale is used only for relative comparison.
+
+\section{Patch Demand Interpretation}
+
+Patch demand is not defined as a single scalar score.
+Instead, each candidate is evaluated based on a combination of:
+
+\begin{itemize}
+\item Low rib periodicity ($S_i$)
+\item Anatomically plausible proximity to the spine
+\item Sufficient spatial extent relative to the image
+\end{itemize}
+
+Candidates that satisfy these criteria to a greater extent
+are considered higher-demand patches
+and are prioritized for subsequent basin-based verification.
+
+\section{Relationship to Basin-Based Verification}
+
+Patch demand serves as a coarse selection mechanism,
+while gravity-inspired attraction and basin containment
+operate as verification steps.
+
+This separation allows imperfect or oversized candidates
+to be retained during selection,
+while topological consistency is enforced later.
+
+\section{Limitations}
+
+The proposed criteria rely on coarse normalization and heuristic ordering.
+No patient-specific body size normalization is performed,
+and image framing may influence the scale criterion.
+
+These limitations are accepted at this stage
+to preserve interpretability and experimental transparency.
+
+\section{Summary}
+
+This note proposes a parameter-free patch demand formulation
+for lung localization in chest X-ray images.
+By combining rib-based local texture analysis,
+global positional context, and relative spatial extent,
+the method prioritizes anatomically plausible lung candidates
+without relying on optimized weighting or learned parameters.
+
+\end{document}
